@@ -1,0 +1,4 @@
+name: MinecraftHTTPAuth
+version: 1.0
+main: rs.tgr.minecraftauth.MinecraftHTTPAuth
+api-version: 1.16
