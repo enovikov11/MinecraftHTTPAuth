@@ -7,13 +7,13 @@ async function api(method, body) {
     }).then(res => res.json());
 }
 
-async function isSubscriber(userId) {
-    const chat = await api("getChatMember", { chat_id: TELEGRAM_CHANNEL, user_id: userId });
+async function isMember(userId) {
+    const chat = await api("getChatMember", { chat_id: TELEGRAM_BE_MEMBER, user_id: userId });
     return chat.ok && ["creator", "administrator", "member"].includes(chat.result.status);
 }
 
 async function onMessage(chatId, text) {
-    if (!await isSubscriber(chatId)) return locale.subscribe;
+    if (!await isMember(chatId)) return locale.subscribe;
 
     const [command, name] = text.split(" ");
     if (!["/start", "/claim"].includes(command) || !name) return locale.usage;
@@ -73,8 +73,9 @@ async function onLoginAttempt(name, ip) {
 }
 
 async function onRequest(req) {
+    if (req.method !== "POST") return new Response("", { status: 404 });
     const url = new URL(req.url), name = url.searchParams.get("name"), ip = url.searchParams.get("ip");
-    if (!name || !ip) return new Response("missing_name_ip", { status: 400 });
+    if (!name || !ip) return new Response("", { status: 400 });
 
     const response = await onLoginAttempt(name, ip);
     return new Response(response, { status: 200 });
@@ -110,11 +111,12 @@ const WAIT_TIME = 10000, SESSION_TIME = 6 * 60 * 60 * 1000, MAX_NICKS_PER_TG = 1
 
 const TELEGRAM_API_KEY = Deno.env.get("TELEGRAM_API_KEY"),
     TELEGRAM_BOT_URL = Deno.env.get("TELEGRAM_BOT_URL"),
-    TELEGRAM_CHANNEL = Deno.env.get("TELEGRAM_CHANNEL"),
+    TELEGRAM_BE_MEMBER = Deno.env.get("TELEGRAM_BE_MEMBER"),
+    TELEGRAM_SUBSCRIBE_MSG = Deno.env.get("TELEGRAM_SUBSCRIBE_MSG"),
     API_URL = `https://api.telegram.org/bot${TELEGRAM_API_KEY}`;
 
-if (!TELEGRAM_API_KEY || !TELEGRAM_BOT_URL || !TELEGRAM_CHANNEL) {
-    throw new Error("Set TELEGRAM_API_KEY, TELEGRAM_BOT_URL, TELEGRAM_CHANNEL envs");
+if (!TELEGRAM_API_KEY || !TELEGRAM_BOT_URL || !TELEGRAM_BE_MEMBER || !TELEGRAM_SUBSCRIBE_MSG) {
+    throw new Error("Set ENVs: TELEGRAM_API_KEY, TELEGRAM_BOT_URL, TELEGRAM_BE_MEMBER, TELEGRAM_SUBSCRIBE_MSG");
 }
 
 const locale = {
@@ -130,7 +132,7 @@ const locale = {
     denied: (name, ip) => `Вход под именем ${name} с ip ${ip} запрещен`,
     nologin: `Нужно подтвердить вход через телеграм ${TELEGRAM_BOT_URL}`,
     toomany: `У тебя уже есть 2 ника, больше нельзя`,
-    subscribe: `Только для подписчиков канала https://t.me/` + TELEGRAM_CHANNEL.replace("@", ""),
+    subscribe: TELEGRAM_SUBSCRIBE_MSG,
 }
 
 const attempts = new Set(), callbacks = {}, sessions = {};

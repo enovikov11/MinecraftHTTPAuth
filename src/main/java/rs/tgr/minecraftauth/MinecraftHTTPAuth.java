@@ -27,7 +27,9 @@ public class MinecraftHTTPAuth extends JavaPlugin implements Listener {
 
             URL url = new URL(urlString);
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
+            con.setRequestMethod("POST");
+            con.setConnectTimeout(300000);
+            con.setReadTimeout(300000);
 
             int status = con.getResponseCode();
             assert status == HttpURLConnection.HTTP_OK : "Unexpected response code: " + status;
