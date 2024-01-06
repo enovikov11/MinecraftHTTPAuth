@@ -35,7 +35,7 @@ async function onLoginAttempt(name, ip) {
 
     const attemptId = Date.now(), chatId = mapping[name], allowData = `allow${attemptId}`, denyData = `deny${attemptId}`;
 
-    if (!await isSubscriber(chatId)) return locale.subscribe;
+    if (!await isMember(chatId)) return locale.subscribe;
 
     if (name in sessions && sessions[name].ip === ip && Date.now() - sessions[name].time < SESSION_TIME) {
         return "OK";
