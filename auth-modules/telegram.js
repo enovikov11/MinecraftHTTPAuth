@@ -131,7 +131,7 @@ const locale = {
     allowed: (name, ip) => `Вход под именем ${name} с ip ${ip} разрешен`,
     denied: (name, ip) => `Вход под именем ${name} с ip ${ip} запрещен`,
     nologin: `Нужно подтвердить вход через телеграм ${TELEGRAM_BOT_URL}`,
-    toomany: `У тебя уже есть 2 ника, больше нельзя`,
+    toomany: `У тебя уже есть никнейм`,
     subscribe: TELEGRAM_SUBSCRIBE_MSG,
 }
 

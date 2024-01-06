@@ -10,11 +10,11 @@
 
 #### Плагин
 
-Компилим java через maven, командой `mvn package`, переносим `./target/MinecraftHTTPAuth-1.0.jar` в `./mc-server/data/plugins/`
+Берем jar из артефактов либо компилим через maven, командой `mvn package`, переносим `./target/MinecraftHTTPAuth-1.0.jar` в `./mc-server/data/plugins/`
 
 #### Модуль залогина
 
-Важно: Если майнкрафт сервер запущен не в докере, нужно пробросить порт `1337` на `127.0.0.1:1337` и прописать `mcauth.local` в hosts
+Важно: Если майнкрафт сервер запущен не в докере, нужно пробросить порт `1337` на `127.0.0.1:1337` и прописать `mcauth.local` в hosts  
 Важно: Монтирование volume нужно тк рядом с telegram.js появится mapping.json где будут пары никнейм-chatId
 
 Добавляем в docker-compose.yml с нашим сервером
