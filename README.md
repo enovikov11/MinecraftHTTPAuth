@@ -2,6 +2,8 @@
 
 Это плагин для Bukkit/Spigot/Paper, проверяет пользователя до спавна.
 
+Например minecraft.anatoliy.ch:2024 - сервер сообщества https://t.me/ch_an работает на MinecraftHTTPAuth.
+
 При попытке зайти на сервер, [стучится по HTTP](https://github.com/enovikov11/MinecraftHTTPAuth/blob/main/src/main/java/rs/tgr/minecraftauth/MinecraftHTTPAuth.java#L23) в модуль залогина http://mcauth.local:1337/.
 
 Его можно реализовать на любом языке и проверять что угодно, например [auth-modules/telegram.js](https://github.com/enovikov11/MinecraftHTTPAuth/blob/main/auth-modules/telegram.js) присылает сообщение в телеграм где просит подтвердить залогин и проверяет что пользователь состоит в группе/чате.
