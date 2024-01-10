@@ -1,17 +1,17 @@
 package rs.tgr.minecraftauth;
 
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.event.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.net.*;
 
 public class MinecraftHTTPAuth extends JavaPlugin implements Listener {
+    private static final int TIMEOUT_MS = 300000;
+    private static final String host = "mcauth.local:1337";
+
     @Override
     public void onEnable() {
         getServer().getPluginManager().registerEvents(this, this);
@@ -19,37 +19,43 @@ public class MinecraftHTTPAuth extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onAsyncPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
-        try {
-            String urlString = "http://mcauth.local:1337/?name=" +
-                    URLEncoder.encode(event.getName(), "UTF-8") +
-                    "&ip=" + URLEncoder.encode(event.getAddress().getHostAddress(), "UTF-8") +
-                    "&uuid=" + URLEncoder.encode(event.getUniqueId().toString(), "UTF-8");
+        String message = "Auth service unavailable";
+        HttpURLConnection con = null;
 
-            URL url = new URL(urlString);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        try {
+            String name = URLEncoder.encode(event.getName(), "UTF-8");
+            String ip = URLEncoder.encode(event.getAddress().getHostAddress(), "UTF-8");
+            String uuid = URLEncoder.encode(event.getUniqueId().toString(), "UTF-8");
+            String urlString = "http://" + host + "/?name=" + name + "&ip=" + ip + "&uuid=" + uuid;
+
+            con = (HttpURLConnection) new URL(urlString).openConnection();
             con.setRequestMethod("POST");
-            con.setConnectTimeout(300000);
-            con.setReadTimeout(300000);
+            con.setConnectTimeout(TIMEOUT_MS);
+            con.setReadTimeout(TIMEOUT_MS);
 
             int status = con.getResponseCode();
-            assert status == HttpURLConnection.HTTP_OK : "Unexpected response code: " + status;
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+            if (status != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Unexpected response code: " + status);
             }
-            in.close();
 
-            String answer = content.toString();
-
-            if (!"OK".equals(answer)) {
-                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, answer);
+            InputStream in = con.getInputStream();
+            byte[] answer = new byte[1024];
+            int readBytes = in.read(answer);
+            if (readBytes == -1) {
+                throw new IOException("No response from authentication server");
             }
+
+            message = new String(answer, StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();
-            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Auth service unavailable");
+        } finally {
+            if (con != null) {
+                con.disconnect();
+            }
+        }
+
+        if (!"OK".equals(message)) {
+            event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, message);
         }
     }
 }
